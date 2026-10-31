@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>칼 강화 게임</title>
+<style>
+:root{--bg:#080e19;--panel:#101a2a;--panel2:#0b1422;--line:#253750;--text:#edf5ff;--muted:#91a8c7;--blue:#2387ff;--gold:#ffc65d;--green:#53e0a0;--red:#ff6b75}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#1c2d49 0,#080e19 55%);color:var(--text);font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;min-height:100vh;padding-bottom:70px}
+button{font:inherit;cursor:pointer;border:0;color:inherit;transition:.15s}button:disabled{opacity:.4;cursor:not-allowed}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 22px;border-bottom:1px solid #293b55;background:#09111eeb;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}.brand-icon{font-size:34px}.brand h1{font-size:22px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.stats{display:flex;gap:24px;align-items:center}.stat{display:flex;gap:9px;align-items:center}.stat .emoji{font-size:23px}.stat small{display:block;color:var(--muted);font-size:11px}.stat strong{font-size:17px}.settings{background:#1a2a41;border:1px solid #344b68;border-radius:10px;padding:9px 12px}
+main{max-width:1440px;margin:auto;padding:18px;display:grid;grid-template-columns:minmax(240px, .95fr) minmax(340px,1.3fr) minmax(280px,1.05fr);gap:14px;align-items:start}
+.panel{background:linear-gradient(145deg,#111c2cfa,#091321fa);border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:0 12px 28px #0003}.panel-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}.panel-title h2{font-size:17px;margin:0}.sub{color:var(--muted);font-size:11px;margin:0 0 12px}
+.shop-list{display:grid;gap:8px}.shop-item{display:grid;grid-template-columns:60px 1fr auto;gap:9px;align-items:center;background:#0c1727;border:1px solid #23364e;border-radius:10px;padding:8px}.shop-item.selected{border-color:var(--blue);box-shadow:0 0 0 1px #2387ff45}.mini-sword{width:58px;height:62px;display:grid;place-items:center;background:#09111d;border:1px solid #23364e;border-radius:8px}.mini-sword svg{width:45px;height:50px}.shop-name{font-size:13px;font-weight:750}.shop-desc{font-size:10px;color:var(--muted);margin-top:3px}.price{font-size:12px;color:#ffd77f;margin-top:7px}.buy{background:#1d6fe0;border-radius:8px;padding:8px 10px;font-size:11px;font-weight:800}.buy:hover,.upgrade:hover:not(:disabled){filter:brightness(1.15);transform:translateY(-1px)}
+.center{position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 37%,#633b24 0,#281c1c 30%,#111827 62%,#0a111d 100%);min-height:570px;text-align:center;padding:18px 15px}.center:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,transparent 0 28px,#ffbd5b06 29px 30px);pointer-events:none}.center>*{position:relative}.center h2{margin:0;font-size:24px}.center .sub{font-size:13px;margin-top:5px}.forge{width:min(230px,65vw);aspect-ratio:1;border-radius:50%;margin:20px auto 12px;display:grid;place-items:center;background:radial-gradient(circle at 50% 55%,#26334a 0,#141b29 57%,#070c15 72%);border:5px solid #6e553d;box-shadow:0 0 0 2px #d6a45b55,0 0 38px #ff9d3b3b,inset 0 0 25px #000}.forge svg{width:66%;height:76%;filter:drop-shadow(0 10px 7px #0009);transition:transform .25s}.sword-name{font-size:20px;font-weight:850}.level{display:inline-block;background:#0a1423;border:1px solid #354b68;border-radius:20px;padding:5px 20px;color:#8fc4ff;font-size:18px;font-weight:800;margin-top:5px}
+.pricebox{max-width:390px;margin:14px auto 10px;background:#0b1422ed;border:1px solid #354b68;border-radius:10px;padding:11px 15px;text-align:left}.price-row{display:flex;justify-content:space-between;align-items:center;margin:3px 0;font-size:13px}.price-row span{color:#b5c9e2}.price-row strong{font-size:17px}.gain{color:var(--green);font-size:12px;margin-left:5px}
+.preview{max-width:390px;margin:10px auto;background:#0b1422d9;border:1px solid #354b68;border-radius:10px;padding:10px;display:flex;align-items:center;justify-content:space-around}.preview-slot{width:90px}.preview-slot svg{width:65px;height:65px}.preview-slot div{font-size:12px;color:#c9d9ed}.arrow{font-size:30px;color:#a8c9f4}
+.upgrade{width:min(390px,100%);padding:14px;border-radius:10px;background:linear-gradient(120deg,#258dff,#1558db);box-shadow:0 5px 0 #0b367e;font-size:18px;font-weight:900}.upgrade small{display:block;font-size:12px;font-weight:500;margin-top:3px}.chance{font-size:12px;color:#c5d7ef;margin:10px 0 0}.chance strong{color:#ffda86}
+.rightcol{display:grid;gap:12px}.inventory-list{display:grid;gap:7px}.inv-item{display:grid;grid-template-columns:65px 1fr auto;align-items:center;gap:9px;padding:8px;background:#0b1524;border:1px solid #23364e;border-radius:10px;cursor:pointer}.inv-item.active{border-color:#258dff;box-shadow:0 0 0 1px #258dff40}.inv-item svg{width:54px;height:54px}.inv-name{font-size:12px;font-weight:800}.inv-meta{font-size:11px;color:#b4c8e2;margin-top:4px}.tag{font-size:10px;padding:4px 6px;border-radius:6px;background:#173f69;color:#a6d5ff;align-self:start}.empty{padding:15px;text-align:center;color:#647d9d;font-size:12px;border:1px dashed #2b405a;border-radius:9px}
+.collection-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;max-height:400px;overflow:auto}.codex-item{min-width:0;text-align:center;background:#0b1524;border:1px solid #253951;border-radius:9px;padding:8px 4px;cursor:pointer}.codex-item svg{width:53px;height:53px}.codex-item.locked svg{opacity:.22;filter:grayscale(1)}.codex-item strong{display:block;font-size:10px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.codex-item small{font-size:9px;color:var(--muted)}.codex-item.unlocked{border-color:#3678bd}.record-list{display:grid;gap:0;max-height:190px;overflow:auto}.record{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid #1e2c40;padding:9px 0;font-size:11px}.record span{color:#a8bed9}.record b{font-weight:700}.success{color:var(--green)!important}.fail{color:var(--red)!important}.note{font-size:12px;line-height:1.9;color:#b5c8e2}.note b{color:#ffd27a}.durability{height:7px;background:#26374d;border-radius:10px;overflow:hidden;margin-top:7px}.durability-fill{height:100%;background:linear-gradient(90deg,#4be0a0,#b8f58c);transition:width .2s}.durability-fill.low{background:linear-gradient(90deg,#ff596b,#ffb05e)}.item-shop{display:grid;gap:8px}.item-card{display:grid;grid-template-columns:42px 1fr auto;gap:8px;align-items:center;padding:10px;background:#0b1524;border:1px solid #263a52;border-radius:10px}.item-icon{font-size:27px;text-align:center}.item-card strong{font-size:12px}.item-card p{font-size:10px;color:var(--muted);margin:3px 0 0}.item-card button{font-size:10px;padding:8px;border-radius:7px;background:#1d6fe0}.luckline{font-size:11px;color:#ffda86;margin:0 0 10px}.toast{position:fixed;left:50%;bottom:85px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#13243a;border:1px solid #3b587a;border-radius:12px;padding:12px 18px;box-shadow:0 10px 30px #0007;z-index:10;transition:.2s;text-align:center;max-width:90vw}.toast.show{opacity:1;transform:translate(-50%,0)}.toast.good{border-color:#2fae79}.toast.bad{border-color:#d64e60}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#09111e;border-top:1px solid #293b55;display:flex;justify-content:center;gap:12px;padding:10px;z-index:20}
+.bottom-nav button{background:#1a2a41;border:1px solid #344b68;border-radius:10px;padding:12px 24px;font-weight:700;font-size:15px}
+.bottom-nav button.active{background:#2387ff;border-color:#5aa3ff}
+.enchant-page{display:none;max-width:1000px;margin:18px auto;padding:0 18px}
+.enchant-page.show{display:block}
+.enchant-center{text-align:center;padding:20px}
+.enchant-types{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:15px 0}
+.etype{background:#0b1524;border:1px solid #253951;border-radius:10px;padding:10px;text-align:center;font-size:12px}
+.modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:100}
+.modal-content{background:#101a2a;border:1px solid #354b68;border-radius:16px;padding:24px;max-width:480px;width:90%;text-align:center}
+.modal h3{margin:0 0 12px;font-size:20px}
+.modal p{color:#b5c8e2;line-height:1.6;margin:0 0 18px}
+.modal-btns{display:flex;gap:10px;justify-content:center}
+.modal-btns button{padding:10px 20px;border-radius:8px;background:#1d6fe0;font-weight:700}
+.skip{background:#263a52!important}
+footer{text-align:center;color:#6f85a3;font-size:11px;padding:0 0 20px}
+@media(max-width:1050px){main{grid-template-columns:minmax(220px,.8fr) minmax(320px,1.2fr)}.rightcol{grid-column:1/-1;grid-template-columns:1fr 1fr}.stats{gap:12px}}
+@media(max-width:680px){header{padding:12px;align-items:flex-start}.brand h1{font-size:17px}.brand p{display:none}.brand-icon{font-size:27px}.stats{gap:10px}.stat .emoji{font-size:17px}.stat strong{font-size:13px}.stat small{font-size:9px}.settings{display:none}main{display:flex;flex-direction:column;padding:10px;width:100%}.panel,.center,.rightcol{width:100%}.center{order:0;min-height:0}.shop-panel{order:1}.rightcol{order:2;display:grid;grid-template-columns:1fr}.records-panel{order:3}.forge{width:190px;margin-top:15px}.shop-item{grid-template-columns:55px 1fr auto}.shop-item .mini-sword{width:52px}.shop-item .buy{padding:8px}.collection-grid{grid-template-columns:repeat(4,1fr)}.bottom-nav button{padding:10px 16px;font-size:13px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="brand"><div class="brand-icon">⚔️</div><div><h1>칼 강화 게임</h1><p>강화하고, 더 강한 칼을 만들어 보세요!</p></div></div>
+ <div class="stats">
+  <div class="stat"><span class="emoji">🪙</span><div><small>보유 골드</small><strong id="gold">100,000원</strong></div></div>
+  <div class="stat"><span class="emoji">🗡️</span><div><small>보유 칼</small><strong id="swordCount">1개</strong></div></div>
+ </div>
+ <button class="settings" id="resetBtn" title="게임 초기화">⚙ 초기화</button>
+</header>
+<div id="mainPage">
+<main>
+ <section class="panel shop-panel">
+  <div class="panel-title"><h2>🛒 칼 상점</h2></div><p class="sub">강화할 칼을 구매할 수 있습니다. (1초 이상 누르면 연속 구매)</p>
+  <div class="shop-list" id="shopList"></div>
+ </section>
+ <section class="panel center">
+  <h2>강화하기</h2><p class="sub">칼을 강화하여 더 높은 등급의 칼을 만들어보세요!</p>
+  <div class="forge" id="forge"><div id="mainSword"></div></div>
+  <div class="sword-name" id="mainName">낡은 단검</div><div class="level" id="mainLevel">1강</div>
+  <div class="pricebox"><div class="price-row"><span>판매 가격</span><div><strong id="sellPrice">1,500원</strong><span class="gain" id="gain">▲ 500원</span></div></div><div class="price-row"><span>강화 성공 확률</span><strong id="chance">90.00%</strong></div></div>
+  <div class="preview"><div class="preview-slot"><div id="beforeSword"></div><div id="beforeLevel">현재 · 1강</div></div><div class="arrow">→</div><div class="preview-slot"><div id="afterSword"></div><div id="afterLevel">성공 시 · 2강</div></div></div>
+  <button class="upgrade" id="upgradeBtn">🔨 강화하기 <small id="upgradeCost">(1,000원)</small></button>
+  <p class="chance">성공하면 칼이 진화합니다. 실패해도 칼은 사라지지 않아요!</p>
+ </section>
+ <div class="rightcol">
+  <section class="panel"><div class="panel-title"><h2>🗡️ 내 칼 목록</h2><span id="invCount" class="sub" style="margin:0">1 / 10</span></div><p class="sub">강화할 칼을 선택하거나 판매하세요.</p><div class="inventory-list" id="inventory"></div></section>
+  <section class="panel"><div class="panel-title"><h2>🛍️ 아이템 상점</h2></div><p class="sub">골드를 사용해 강화에 도움이 되는 아이템을 구매하세요. (1초 이상 누르면 연속 구매)</p><p class="luckline" id="luckStatus">영구 행운 보너스 +0%</p><div class="item-shop" id="itemShop"></div></section>
+  <section class="panel"><div class="panel-title"><h2>🏅 칼 도감</h2><span id="codexCount" class="sub" style="margin:0">1 / 250</span></div><p class="sub">한 번이라도 획득한 강화 단계를 기록합니다.</p><div class="collection-grid" id="codex"></div></section>
+ </div>
+ <section class="panel records-panel"><div class="panel-title"><h2>📜 강화 기록</h2><button id="clearLog" class="settings" style="font-size:10px;padding:5px 8px">기록 지우기</button></div><div class="record-list" id="logs"></div></section>
+ <section class="panel"><div class="panel-title"><h2>💡 알아두세요!</h2></div><div class="note">• 강화에 성공하면 칼의 모양과 색상이 단계별로 바뀝니다.<br>• 강화할수록 판매 가격이 올라가지만 성공 확률은 낮아집니다.<br>• 실패해도 칼은 사라지지 않습니다. <b>골드를 모아 다시 도전하세요!</b><br>• 칼은 최대 10개까지 보유할 수 있으며, 판매해 골드를 마련할 수 있습니다.<br>• 250강에 도달하면 전설의 칼 도감이 완성됩니다.<br>• 하단의 <b>인챈트 공방</b>에서 칼에 인챈트를 붙여 가치를 더 높일 수 있습니다.</div></section>
+</main>
+</div>
+<div id="enchantPage" class="enchant-page">
+ <section class="panel enchant-center">
+  <h2>✨ 인챈트 공방</h2>
+  <p class="sub">확률로 인챈트를 뽑고, 강화하여 칼의 판매 가치를 높이세요!</p>
+  <div id="enchantSwordArea"></div>
+  <div class="pricebox" style="max-width:500px;margin:15px auto">
+   <div class="price-row"><span>현재 인챈트</span><strong id="currentEnchant">없음</strong></div>
+   <div class="price-row"><span>가치 배율</span><strong id="enchantMult">×1.00</strong></div>
+   <div class="price-row"><span>인챈트 강화</span><strong id="enchantLevel">-</strong></div>
+   <div class="price-row"><span>인챈트 내구도</span><strong id="enchantDur">-</strong></div>
+  </div>
+  <button class="upgrade" id="drawEnchantBtn" style="margin:10px auto;display:block;max-width:390px">🎲 인챈트 뽑기 <small>(10,000원)</small></button>
+  <p class="chance" style="margin-top:5px">1단계 60% · 2단계 30% · 3단계 10% (7종류 중 랜덤)</p>
+  <button class="upgrade" id="enhanceEnchantBtn" style="margin:10px auto;display:block;max-width:390px;background:linear-gradient(120deg,#9b59b6,#6c3483)">🔨 인챈트 강화하기 <small id="enchantCost"></small></button>
+  <p class="chance">인챈트 강화 성공 시 배율이 더 올라갑니다. 실패 시 내구도가 감소합니다. (최대 100강)</p>
+  <div style="margin-top:20px">
+   <h3 style="margin:0 0 10px">인챈트 종류 (21종)</h3>
+   <div class="enchant-types" id="enchantTypesList"></div>
+  </div>
+  <div class="item-shop" id="enchantItemShop" style="max-width:500px;margin:20px auto"></div>
+ </section>
+</div>
+<div id="huntPage" class="enchant-page">
+ <section class="panel enchant-center">
+  <h2>🐲 사냥터</h2>
+  <p class="sub">칼을 휘둘러 몬스터를 처치하고 골드와 재료를 획득하세요!</p>
+  <div id="huntSwordInfo"></div>
+  <div style="margin:15px 0">
+   <label>몬스터 레벨: <strong id="monsterLevelDisplay">1</strong></label><br>
+   <div style="display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0">
+    <input type="range" id="monsterLevelSlider" min="1" max="10000" value="1" style="width:60%;max-width:400px">
+    <input type="number" id="monsterLevelInput" min="1" max="10000" value="1" style="width:100px;padding:6px;border-radius:6px;border:1px solid #354b68;background:#0b1524;color:#edf5ff;font-size:14px">
+    <button class="buy" onclick="setMonsterLevelFromInputs()">설정</button>
+   </div>
+  </div>
+  <div class="pricebox" style="max-width:480px;margin:10px auto">
+   <div class="price-row"><span>몬스터</span><strong id="monsterName">슬라임 Lv.1</strong></div>
+   <div class="price-row"><span>HP</span><strong id="monsterHP">100 / 100</strong></div>
+   <div class="durability" style="height:12px;margin-top:6px"><div id="monsterHPBar" class="durability-fill" style="width:100%;background:linear-gradient(90deg,#ff6b75,#ffb05e)"></div></div>
+  </div>
+  <button class="upgrade" id="attackBtn" style="margin:15px auto;display:block;max-width:420px;background:linear-gradient(120deg,#e74c3c,#c0392b)">⚔️ 공격하기 (터치)</button>
+  <p class="chance" id="damagePreview">예상 데미지: -</p>
+  <div id="huntDrops" style="margin-top:15px;font-size:13px;color:#b5c8e2"></div>
+  <div style="margin-top:25px">
+   <h3 style="margin:0 0 10px">📊 스탯 강화</h3>
+   <div id="statsPanel" class="item-shop" style="max-width:520px;margin:0 auto"></div>
+  </div>
+ </section>
+</div>
+<div class="bottom-nav">
+ <button id="navMain" class="active" onclick="showPage('main')">⚔️ 강화소</button>
+ <button id="navEnchant" onclick="showPage('enchant')">✨ 인챈트 공방</button>
+ <button id="navHunt" onclick="showPage('hunt')">🐲 사냥터</button>
+</div>
+<footer>당신만의 전설적인 칼을 만들어 보세요. ⚔️</footer>
+<div class="toast" id="toast"></div>
+<div id="tutorial" class="modal" style="display:none">
+ <div class="modal-content">
+  <h3 id="tutTitle">환영합니다!</h3>
+  <p id="tutText"></p>
+  <div class="modal-btns">
+   <button class="skip" id="skipTut">스킵</button>
+   <button id="nextTut">다음</button>
+  </div>
+ </div>
+</div>
+<script>
+const names=["낡은 단검","청동의 검","철제 장검","용의 검","황금의 검","전설의 검","신화의 검","성운의 검","천공의 검","혼돈의 검","별빛의 검","심연의 검","용왕의 검","시간의 검","창세의 검"];
+const colors=["#b9c8da","#c68d57","#aebdd2","#ff8b38","#ffd45e","#b68bff","#ffb347","#63dcff","#e6f4ff","#d98bff","#fff0a5","#9e9eff","#ff5c74","#62ffca","#ffffff"];
+const enchantTypes=[
+ {name:"화염",icon:"🔥",mult:[1.12,1.28,1.55]},
+ {name:"냉기",icon:"❄️",mult:[1.10,1.25,1.50]},
+ {name:"번개",icon:"⚡",mult:[1.15,1.32,1.60]},
+ {name:"독",icon:"☠️",mult:[1.08,1.22,1.45]},
+ {name:"성스러움",icon:"✨",mult:[1.18,1.38,1.70]},
+ {name:"암흑",icon:"🌑",mult:[1.18,1.38,1.70]},
+ {name:"바람",icon:"💨",mult:[1.12,1.30,1.58]}
+];
+const MAX_LEVEL=250;
+const MAX_ENCHANT_LEVEL=100;
+const fmt=n=>Math.floor(n).toLocaleString("ko-KR")+"원";
+const swordName=l=>l===1?names[0]:l<=names.length?names[l-1]:`${names[(l-1)%names.length]} +${l-1}`;
+const colorFor=l=>colors[Math.min(colors.length-1,Math.floor((l-1)/7))];
+function swordSVG(level,large=false){
+ const c=colorFor(level);
+ const glow=level>=8?`filter="url(#glow)"`:"";
+ const id=level; // unique gradient id
+ // Determine style tier for dramatically different shapes
+ const tier=level<=10?0:level<=25?1:level<=50?2:level<=90?3:level<=140?4:level<=190?5:6;
+
+ let bladePath, guardPath, hiltExtra, effects="";
+
+ if(tier===0){
+  // Simple short dagger
+  bladePath=`<path d="M50 18 L62 68 L50 78 L38 68 Z" fill="url(#blade${id})" stroke="#e9f3ff" stroke-width="1.2"/>`;
+  guardPath=`<path d="M34 70 Q50 76 66 70 L63 77 Q50 83 37 77 Z" fill="${c}" stroke="#e9d8b2" stroke-width="1.5"/>`;
+ } else if(tier===1){
+  // Standard longsword
+  bladePath=`<path d="M50 8 L68 62 L50 78 L32 62 Z" fill="url(#blade${id})" stroke="#e9f3ff" stroke-width="1.4"/><path d="M50 10 L50 76" stroke="#fff" stroke-width="1.2" opacity=".7"/>`;
+  guardPath=`<path d="M28 68 Q50 76 72 68 L68 76 Q50 85 32 76 Z" fill="${c}" stroke="#e9d8b2" stroke-width="2"/>`;
+ } else if(tier===2){
+  // Wider, slightly curved fantasy blade
+  bladePath=`<path d="M50 6 Q78 40 70 65 L50 80 Q30 65 22 40 Z" fill="url(#blade${id})" stroke="#e9f3ff" stroke-width="1.5"/>
+             <path d="M50 8 Q50 40 50 78" stroke="#fff" stroke-width="1.4" opacity=".8"/>`;
+  guardPath=`<path d="M22 66 L50 74 L78 66 L74 74 L50 82 L26 74 Z" fill="${c}" stroke="#d4af37" stroke-width="2"/>`;
+  effects=`<path d="M50 12 L55 30 L50 28 L45 30 Z" fill="${c}" opacity=".6"/>`;
+ } else if(tier===3){
+  // Greatsword with fuller and ornate guard
+  bladePath=`<path d="M50 4 L75 58 L50 82 L25 58 Z" fill="url(#blade${id})" stroke="#fff" stroke-width="1.6"/>
+             <path d="M50 6 L50 80" stroke="#fff" stroke-width="2" opacity=".5"/>
+             <path d="M42 20 L58 20 L55 70 L45 70 Z" fill="${c}" opacity=".25"/>`;
+  guardPath=`<path d="M18 64 L50 72 L82 64 L76 74 L50 84 L24 74 Z" fill="${c}" stroke="#ffd700" stroke-width="2.5"/>`;
+  effects=`<circle cx="50" cy="72" r="5" fill="${c}" stroke="#fff" stroke-width="1"/>`;
+ } else if(tier===4){
+  // Spiked / winged legendary blade
+  bladePath=`<path d="M50 2 L80 50 L68 70 L50 85 L32 70 L20 50 Z" fill="url(#blade${id})" stroke="#fff" stroke-width="1.8"/>
+             <path d="M50 4 L50 82" stroke="#fff" stroke-width="2.2" opacity=".6"/>`;
+  guardPath=`<path d="M12 62 L50 70 L88 62 L80 76 L50 86 L20 76 Z" fill="${c}" stroke="#fff" stroke-width="2"/>
+             <path d="M20 60 L15 50 L25 58 Z" fill="${c}"/><path d="M80 60 L85 50 L75 58 Z" fill="${c}"/>`;
+  effects=`<path d="M30 25 L35 15 L32 28 Z" fill="${c}" opacity=".8"/><path d="M70 25 L65 15 L68 28 Z" fill="${c}" opacity=".8"/>`;
+ } else if(tier===5){
+  // Crystalline / energy blade
+  bladePath=`<path d="M50 0 L82 45 L70 68 L50 88 L30 68 L18 45 Z" fill="url(#blade${id})" stroke="${c}" stroke-width="2"/>
+             <path d="M50 2 L50 86" stroke="#fff" stroke-width="3" opacity=".7"/>
+             <path d="M40 15 L60 15 L58 75 L42 75 Z" fill="${c}" opacity=".35"/>`;
+  guardPath=`<ellipse cx="50" cy="74" rx="38" ry="10" fill="${c}" opacity=".9" stroke="#fff" stroke-width="1.5"/>`;
+  effects=`<circle cx="50" cy="74" r="6" fill="#fff" opacity=".8"/>
+           <path d="M25 40 L30 25 L35 42 Z" fill="${c}" opacity=".7"/><path d="M75 40 L70 25 L65 42 Z" fill="${c}" opacity=".7"/>`;
+ } else {
+  // Ultimate legendary - multi-layer chaotic / divine
+  bladePath=`<path d="M50 -2 L90 40 L75 65 L50 92 L25 65 L10 40 Z" fill="url(#blade${id})" stroke="#fff" stroke-width="2.2"/>
+             <path d="M50 0 L50 90" stroke="#fff" stroke-width="3.5" opacity=".8"/>
+             <path d="M35 10 L65 10 L60 80 L40 80 Z" fill="${c}" opacity=".4"/>
+             <path d="M50 5 L70 35 L50 50 L30 35 Z" fill="#fff" opacity=".25"/>`;
+  guardPath=`<path d="M5 60 L50 68 L95 60 L85 78 L50 90 L15 78 Z" fill="${c}" stroke="#fff" stroke-width="2.5"/>
+             <path d="M15 58 L8 42 L22 54 Z" fill="${c}"/><path d="M85 58 L92 42 L78 54 Z" fill="${c}"/>
+             <circle cx="50" cy="72" r="8" fill="${c}" stroke="#fff" stroke-width="2"/>`;
+  effects=`<path d="M20 20 L28 8 L26 24 Z" fill="${c}"/><path d="M80 20 L72 8 L74 24 Z" fill="${c}"/>
+           <path d="M35 5 L40 0 L38 10 Z" fill="#fff" opacity=".9"/><path d="M65 5 L60 0 L62 10 Z" fill="#fff" opacity=".9"/>`;
+ }
+
+ // Hilt (mostly consistent but color/thickness changes)
+ const hiltW=tier>=4?14:tier>=2?12:10;
+ const hilt=`<path d="M50 ${tier>=3?82:80} L50 108" stroke="#a97845" stroke-width="${hiltW}" stroke-linecap="round"/>
+            <path d="M50 85 L50 105" stroke="#503b2d" stroke-width="5" stroke-dasharray="4 4"/>
+            <path d="M42 108 L58 108 L55 116 L45 116 Z" fill="#d4b17b" stroke="#4b3729" stroke-width="1.5"/>`;
+
+ // Extra sparks / particles for high levels
+ const sparks=level>=15?Array.from({length:Math.min(14,Math.floor(level/12))},(_,i)=>{
+  const x=20+(i*19)%60, y=10+(i*27)%70;
+  return `<path d="M${x} ${y} l2 -5 l1.5 5.5 l5 1.5 l-5 1.5 l-1.5 5 l-1.5 -5 l-5 -1.5 Z" fill="${c}" opacity=".7"/>`;
+ }).join(""):"";
+
+ const extraAura=level>=30?`<ellipse cx="50" cy="50" rx="${30+tier*4}" ry="${40+tier*5}" fill="${c}" opacity="0.08"/>`:"";
+
+ return `<svg viewBox="0 0 100 120" role="img" aria-label="${level}강 칼" ${glow}>
+  <defs>
+   <linearGradient id="blade${id}" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#ffffff" offset="0"/>
+    <stop stop-color="${c}" offset=".4"/>
+    <stop stop-color="#3a4a5c" offset="1"/>
+   </linearGradient>
+   <filter id="glow"><feGaussianBlur stdDeviation="${Math.min(6,2+tier)}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  ${extraAura}${sparks}
+  <g transform="rotate(${tier>=5?28:35} 50 60)">
+   ${bladePath}
+   ${guardPath}
+   ${effects}
+   ${hilt}
+  </g>
+ </svg>`;
+}
+let gold=100000, inventory=[{id:1,level:1,durability:10,durabilityBonus:0,enchant:null}], selected=1, nextId=2, discovered=new Set([1]), logs=[], permanentLuck=0, durabilityTickets=0, enchantDurabilityTickets=0;
+let materials={stone:0,luck:0,crit:0,power:0};
+let stats={damage:0,luck:0,crit:0,critDmg:0};
+let monsterLevel=1, monsterHP=0, monsterMaxHP=100, lastDrops=[];
+
+function saveGame(){
+ try{
+  const data={
+   gold, inventory, selected, nextId,
+   discovered:Array.from(discovered),
+   logs, permanentLuck, durabilityTickets, enchantDurabilityTickets,
+   materials, stats, monsterLevel
+  };
+  localStorage.setItem("swordGameSave", JSON.stringify(data));
+ }catch(e){ console.warn("Save failed", e); }
+}
+
+function loadGame(){
+ try{
+  const raw=localStorage.getItem("swordGameSave");
+  if(!raw) return false;
+  const data=JSON.parse(raw);
+  if(typeof data.gold!=="number" || !Array.isArray(data.inventory)) return false;
+  gold=data.gold;
+  inventory=data.inventory;
+  selected=data.selected||1;
+  nextId=data.nextId||2;
+  discovered=new Set(data.discovered||[1]);
+  logs=Array.isArray(data.logs)?data.logs:[];
+  permanentLuck=data.permanentLuck||0;
+  durabilityTickets=data.durabilityTickets||0;
+  enchantDurabilityTickets=data.enchantDurabilityTickets||0;
+  materials=data.materials||{stone:0,luck:0,crit:0,power:0};
+  stats=data.stats||{damage:0,luck:0,crit:0,critDmg:0};
+  monsterLevel=data.monsterLevel||1;
+  inventory.forEach(s=>{
+   if(typeof s.durability!=="number") s.durability=10;
+   if(typeof s.durabilityBonus!=="number") s.durabilityBonus=0;
+   if(s.enchant && typeof s.enchant!=="object") s.enchant=null;
+  });
+  return true;
+ }catch(e){ console.warn("Load failed", e); return false; }
+}
+const cost=l=>Math.round(1000*Math.pow(1.22,l-1));
+const baseSell=l=>Math.round(1500*Math.pow(1.42,l-1));
+function sell(s){
+ let price=baseSell(s.level);
+ if(s.enchant){
+  const et=enchantTypes[s.enchant.type];
+  const stageMult=et.mult[s.enchant.stage-1];
+  const levelMult=1+(s.enchant.level-1)*0.012;
+  price=Math.round(price*stageMult*levelMult);
+ }
+ return price;
+}
+const baseChance=l=>Math.max(1.5,90*Math.pow(0.985,l-1));
+const chance=l=>Math.min(99,baseChance(l)+permanentLuck*(100-baseChance(l))/100);
+const showChance=value=>value.toFixed(2).replace(/\.00$/,"")+"%";
+function selectedSword(){return inventory.find(s=>s.id===selected)||inventory[0]||null}
+function addLog(text,type=""){logs.unshift({text,type,time:new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",hour12:false})});logs=logs.slice(0,40)}
+function toast(msg,type=""){let t=document.getElementById("toast");t.textContent=msg;t.className="toast show "+type;clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.className="toast",2200)}
+function showPage(page){
+ document.getElementById("mainPage").style.display=page==="main"?"block":"none";
+ document.getElementById("enchantPage").classList.toggle("show",page==="enchant");
+ document.getElementById("huntPage").classList.toggle("show",page==="hunt");
+ document.getElementById("navMain").classList.toggle("active",page==="main");
+ document.getElementById("navEnchant").classList.toggle("active",page==="enchant");
+ document.getElementById("navHunt").classList.toggle("active",page==="hunt");
+ render();
+}
+function render(){
+ document.getElementById("gold").textContent=fmt(gold);
+ document.getElementById("swordCount").textContent=inventory.length+"개";
+ document.getElementById("invCount").textContent=inventory.length+" / 10";
+ document.getElementById("codexCount").textContent=discovered.size+" / "+MAX_LEVEL;
+ const s=selectedSword();
+ if(!s){
+  document.getElementById("mainName").textContent="칼이 없습니다";
+  document.getElementById("mainLevel").textContent="상점에서 구매";
+  document.getElementById("mainSword").innerHTML="🛒";
+  document.getElementById("sellPrice").textContent="—";
+  document.getElementById("gain").textContent="";
+  document.getElementById("chance").textContent="—";
+  document.getElementById("beforeSword").innerHTML="";
+  document.getElementById("afterSword").innerHTML="";
+  document.getElementById("beforeLevel").textContent="칼 없음";
+  document.getElementById("afterLevel").textContent="칼을 구매하세요";
+  document.getElementById("upgradeCost").textContent="칼을 구매하세요";
+  document.getElementById("upgradeBtn").disabled=true;
+  document.getElementById("inventory").innerHTML='<div class="empty">보유한 칼이 없습니다. 왼쪽 상점에서 새 칼을 구매하세요.</div>';
+ } else {
+  document.getElementById("mainName").textContent=swordName(s.level);
+  document.getElementById("mainLevel").textContent=s.level+"강";
+  document.getElementById("mainSword").innerHTML=swordSVG(s.level,true);
+  document.getElementById("sellPrice").textContent=fmt(sell(s));
+  document.getElementById("gain").textContent="▲ "+fmt(Math.max(0,sell(s)-baseSell(Math.max(1,s.level-1)))).replace("원","")+"원";
+  document.getElementById("chance").textContent=s.level>=MAX_LEVEL?"MAX":showChance(chance(s.level));
+  document.getElementById("beforeSword").innerHTML=swordSVG(s.level);
+  document.getElementById("afterSword").innerHTML=swordSVG(Math.min(MAX_LEVEL,s.level+1));
+  document.getElementById("beforeLevel").textContent="현재 · "+s.level+"강";
+  document.getElementById("afterLevel").textContent=s.level>=MAX_LEVEL?"최고 단계!":"성공 시 · "+(s.level+1)+"강";
+  document.getElementById("upgradeCost").textContent=s.level>=MAX_LEVEL?"최고 단계 도달":`(${fmt(cost(s.level))})`;
+  document.getElementById("upgradeBtn").disabled=s.level>=MAX_LEVEL||gold<cost(s.level)||s.durability<=0;
+  document.getElementById("inventory").innerHTML=inventory.map(x=>{
+   const ench=x.enchant?enchantTypes[x.enchant.type].icon+" "+enchantTypes[x.enchant.type].name+" "+x.enchant.stage+"단계":"";
+   return `<div class="inv-item ${x.id===selected?"active":""}" onclick="selectSword(${x.id})"><div>${swordSVG(x.level)}</div><div><div class="inv-name">${swordName(x.level)} <span style="color:#8ab5e8">(${x.level}강)</span> ${ench}</div><div class="inv-meta">판매 가격 · ${fmt(sell(x))}</div><div class="inv-meta">내구도 ${x.durability}/10${x.durabilityBonus?` (+${x.durabilityBonus})`:""}</div><div class="durability"><div class="durability-fill ${x.durability<=3?"low":""}" style="width:${Math.max(0,x.durability/(10+(x.durabilityBonus||0))*100)}%"></div></div></div><div style="display:grid;gap:5px"><span class="tag">${x.id===selected?"선택됨":"선택"}</span><button class="buy" style="background:#263a52" onclick="event.stopPropagation();sellSword(${x.id})">판매</button></div></div>`;
+  }).join("");
+ }
+ document.getElementById("luckStatus").textContent=`영구 행운 보너스 +${permanentLuck}% · 내구도 추가권 ${durabilityTickets}장 · 인챈트 내구도권 ${enchantDurabilityTickets}장`;
+ document.getElementById("itemShop").innerHTML=`
+  <div class="item-card"><div class="item-icon">🛠️</div><div><strong>내구도 추가권</strong><p>선택한 칼의 내구도를 +5 회복합니다. (1개당 8,000원)</p></div>
+   <div style="display:flex;gap:4px"><button onclick="buyDurabilityTicket(1)">1</button><button onclick="buyDurabilityTicket(10)">10</button><button onclick="buyDurabilityTicket(100)">100</button></div>
+  </div>
+  <div class="item-card"><div class="item-icon">🍀</div><div><strong>영구 행운 강화</strong><p>모든 칼의 강화 성공 확률이 영구적으로 +2% 상승합니다.</p><p style="color:#ffd77f">🪙 ${fmt(15000*Math.pow(2,permanentLuck/2))}</p></div><button class="hold-buy" data-type="luck" ${permanentLuck>=20?"disabled":""}>${permanentLuck>=20?"최대":"구매"}</button></div>
+  <div class="item-card"><div class="item-icon">🧰</div><div><strong>내구도 추가권 사용</strong><p>보유권 ${durabilityTickets}장 · 선택한 칼에 +5씩</p></div>
+   <div style="display:flex;gap:4px"><button onclick="useDurabilityTicket(1)" ${durabilityTickets<1?"disabled":""}>1</button><button onclick="useDurabilityTicket(10)" ${durabilityTickets<10?"disabled":""}>10</button><button onclick="useDurabilityTicket(100)" ${durabilityTickets<100?"disabled":""}>100</button></div>
+  </div>
+  <div class="item-card"><div class="item-icon">💎</div><div><strong>인챈트 내구도 추가권</strong><p>선택한 칼의 인챈트 내구도 +5 (1개당 12,000원)</p></div>
+   <div style="display:flex;gap:4px"><button onclick="buyEnchantDurabilityTicket(1)">1</button><button onclick="buyEnchantDurabilityTicket(10)">10</button><button onclick="buyEnchantDurabilityTicket(100)">100</button></div>
+  </div>
+ `;
+ document.getElementById("shopList").innerHTML=[1,2,3,4,5,6,7].map(l=>{
+  let p=[1000,2500,5000,10000,25000,50000,100000][l-1];
+  return `<div class="shop-item"><div class="mini-sword">${swordSVG(l)}</div><div><div class="shop-name">${names[l-1]} <span style="color:#7da6d6;font-weight:500">(${l}강)</span></div><div class="price">🪙 ${fmt(p)}</div></div><button class="buy hold-buy" data-type="sword" data-level="${l}" data-price="${p}" ${gold<p||inventory.length>=10?"disabled":""}>구매</button></div>`;
+ }).join("");
+ document.getElementById("codex").innerHTML=Array.from({length:MAX_LEVEL},(_,i)=>{
+  let l=i+1,got=discovered.has(l);
+  return `<div class="codex-item ${got?"unlocked":"locked"}" title="${got?swordName(l):"아직 발견하지 못한 칼"}"><div>${got?swordSVG(l):swordSVG(1)}</div><strong>${got?swordName(l):"미발견"}</strong><small>${got?l+"강":"미발견"}</small></div>`;
+ }).join("");
+ document.getElementById("logs").innerHTML=logs.length?logs.map(x=>`<div class="record"><span>${x.time} · ${x.text}</span><b class="${x.type}">${x.type==="success"?"성공":x.type==="fail"?"실패":""}</b></div>`).join(""):'<div class="empty">아직 기록이 없습니다. 첫 칼을 강화해 보세요!</div>';
+ // Enchant page
+ const area=document.getElementById("enchantSwordArea");
+ if(!s){
+  area.innerHTML='<div class="empty">칼을 먼저 구매하고 선택하세요.</div>';
+  document.getElementById("currentEnchant").textContent="없음";
+  document.getElementById("enchantMult").textContent="×1.00";
+  document.getElementById("enchantLevel").textContent="-";
+  document.getElementById("enchantDur").textContent="-";
+  document.getElementById("enhanceEnchantBtn").disabled=true;
+ } else {
+  area.innerHTML=`<div class="forge" style="width:160px;margin:10px auto"><div>${swordSVG(s.level)}</div></div><div class="sword-name">${swordName(s.level)} (${s.level}강)</div><div style="margin-top:8px;color:#ffd77f">판매가 ${fmt(sell(s))}</div>`;
+  if(s.enchant){
+   const et=enchantTypes[s.enchant.type];
+   const stageMult=et.mult[s.enchant.stage-1];
+   const levelMult=1+(s.enchant.level-1)*0.012;
+   document.getElementById("currentEnchant").textContent=`${et.icon} ${et.name} ${s.enchant.stage}단계`;
+   document.getElementById("enchantMult").textContent=`×${(stageMult*levelMult).toFixed(2)}`;
+   document.getElementById("enchantLevel").textContent=s.enchant.level+"강 / "+MAX_ENCHANT_LEVEL;
+   document.getElementById("enchantDur").textContent=`${s.enchant.durability}/${10+(s.enchant.durabilityBonus||0)}`;
+   const eCost=Math.round(2000*Math.pow(1.18,s.enchant.level-1));
+   document.getElementById("enchantCost").textContent=`(${fmt(eCost)})`;
+   document.getElementById("enhanceEnchantBtn").disabled=s.enchant.level>=MAX_ENCHANT_LEVEL||gold<eCost||s.enchant.durability<=0;
+  } else {
+   document.getElementById("currentEnchant").textContent="없음 (뽑기로 획득)";
+   document.getElementById("enchantMult").textContent="×1.00";
+   document.getElementById("enchantLevel").textContent="-";
+   document.getElementById("enchantDur").textContent="-";
+   document.getElementById("enhanceEnchantBtn").disabled=true;
+  }
+ }
+ document.getElementById("enchantTypesList").innerHTML=enchantTypes.map((et,i)=>`
+  <div class="etype">${et.icon}<br><strong>${et.name}</strong><br><small>1단 ×${et.mult[0]} · 2단 ×${et.mult[1]} · 3단 ×${et.mult[2]}</small></div>
+ `).join("");
+ document.getElementById("enchantItemShop").innerHTML=`
+  <div class="item-card"><div class="item-icon">💎</div><div><strong>인챈트 내구도 추가권 사용</strong><p>보유 ${enchantDurabilityTickets}장 · 선택한 칼의 인챈트에 +5씩</p></div>
+   <div style="display:flex;gap:4px">
+    <button onclick="useEnchantDurabilityTicket(1)" ${enchantDurabilityTickets<1||!s||!s.enchant?"disabled":""}>1</button>
+    <button onclick="useEnchantDurabilityTicket(10)" ${enchantDurabilityTickets<10||!s||!s.enchant?"disabled":""}>10</button>
+    <button onclick="useEnchantDurabilityTicket(100)" ${enchantDurabilityTickets<100||!s||!s.enchant?"disabled":""}>100</button>
+   </div>
+  </div>
+ `;
+ // Hunt page
+ const hs = selectedSword();
+ document.getElementById("huntSwordInfo").innerHTML = hs 
+  ? `<div class="sword-name">${swordName(hs.level)} (${hs.level}강)</div><div style="font-size:13px;color:#ffd77f;margin-top:4px">현재 공격력 기준</div>`
+  : '<div class="empty">칼을 선택하세요</div>';
+ document.getElementById("monsterLevelDisplay").textContent = monsterLevel;
+ document.getElementById("monsterLevelSlider").value = monsterLevel;
+ document.getElementById("monsterLevelInput").value = monsterLevel;
+ document.getElementById("monsterName").textContent = monsterName(monsterLevel);
+ document.getElementById("monsterHP").textContent = `${Math.max(0,monsterHP)} / ${monsterMaxHP}`;
+ document.getElementById("monsterHPBar").style.width = Math.max(0, (monsterHP/monsterMaxHP)*100) + "%";
+ const dmgInfo = hs ? calculateDamage(hs, true) : {dmg:0};
+ document.getElementById("damagePreview").textContent = `예상 데미지: ${dmgInfo.dmg} (치명타 확률 ~${Math.min(60,5+stats.crit*2)}%)`;
+ document.getElementById("huntDrops").innerHTML = lastDrops.length ? "최근 드롭: " + lastDrops.join(" · ") : "";
+ document.getElementById("statsPanel").innerHTML = `
+  <div class="item-card"><div class="item-icon">⚔️</div><div><strong>공격력</strong><p>현재 +${stats.damage} · 데미지 +${stats.damage*8}</p><p>강화석 ${materials.stone||0}개 필요 (1개당 +1)</p></div><button onclick="upgradeStat('damage','stone')">강화</button></div>
+  <div class="item-card"><div class="item-icon">🍀</div><div><strong>행운</strong><p>현재 +${stats.luck} · 드롭 확률 소폭 상승</p><p>행운 파편 ${materials.luck||0}개</p></div><button onclick="upgradeStat('luck','luck')">강화</button></div>
+  <div class="item-card"><div class="item-icon">💥</div><div><strong>치명타 확률</strong><p>현재 +${stats.crit}% (최대 효과 ~60%)</p><p>치명타 정수 ${materials.crit||0}개</p></div><button onclick="upgradeStat('crit','crit')">강화</button></div>
+  <div class="item-card"><div class="item-icon">🔥</div><div><strong>치명타 피해</strong><p>현재 +${stats.critDmg} · 배율 상승</p><p>힘의 결정 ${materials.power||0}개</p></div><button onclick="upgradeStat('critDmg','power')">강화</button></div>
+  <div class="item-card"><div class="item-icon">📦</div><div><strong>보유 재료</strong><p>강화석 ${materials.stone||0} · 행운파편 ${materials.luck||0}<br>치명타정수 ${materials.crit||0} · 힘의결정 ${materials.power||0}</p></div></div>
+ `;
+ setupHoldBuys();
+ saveGame();
+}
+function setupHoldBuys(){
+ document.querySelectorAll(".hold-buy").forEach(btn=>{
+  if(btn._holdBound) return;
+  btn._holdBound=true;
+  let timer, interval;
+  const start=(e)=>{
+   e.preventDefault();
+   const doBuy=()=>{
+    const type=btn.dataset.type;
+    if(type==="sword") return buySword(+btn.dataset.level,+btn.dataset.price,true);
+    if(type==="luck") return buyLuck(true);
+    if(type==="edur") return buyEnchantDurabilityTicket(1,true);
+    return false;
+   };
+   if(!doBuy()) return;
+   timer=setTimeout(()=>{
+    interval=setInterval(()=>{ if(!doBuy()){ clearTimeout(timer); clearInterval(interval); } }, 180);
+   },1000);
+  };
+  const stop=()=>{ clearTimeout(timer); clearInterval(interval); };
+  btn.addEventListener("mousedown",start);
+  btn.addEventListener("touchstart",start,{passive:false});
+  btn.addEventListener("mouseup",stop);
+  btn.addEventListener("mouseleave",stop);
+  btn.addEventListener("touchend",stop);
+  btn.addEventListener("touchcancel",stop);
+ });
+}
+function selectSword(id){selected=id;render()}
+function buySword(level,price,silent=false){
+ if(gold<price){ if(!silent) toast("골드가 부족합니다.","bad"); return false; }
+ if(inventory.length>=10){ if(!silent) toast("칼은 최대 10개까지 보유할 수 있습니다.","bad"); return false; }
+ gold-=price;
+ let s={id:nextId++,level,durability:10,durabilityBonus:0,enchant:null};
+ inventory.push(s);selected=s.id;discovered.add(level);
+ addLog(`${swordName(level)}을(를) 구매했습니다. (${fmt(price)})`);
+ render();
+ if(!silent) toast(`${swordName(level)} 구매 완료!`,"good");
+ return true;
+}
+function sellSword(id){
+ if(inventory.length<=1) return toast("마지막 칼은 판매할 수 없습니다.","bad");
+ let idx=inventory.findIndex(x=>x.id===id); if(idx<0) return;
+ let s=inventory[idx],price=sell(s);
+ gold+=price; inventory.splice(idx,1);
+ if(selected===id) selected=inventory[0].id;
+ addLog(`${swordName(s.level)}을(를) 판매했습니다. +${fmt(price)}`);
+ render(); toast(`칼을 ${fmt(price)}에 판매했습니다.`,"good");
+}
+function enhance(){
+ let s=selectedSword(); if(!s||s.level>=MAX_LEVEL) return;
+ if(s.durability<=0) return toast("이 칼은 부서졌습니다. 다른 칼을 선택하세요.","bad");
+ if(gold<cost(s.level)) return toast("강화 비용이 부족합니다.","bad");
+ let c=cost(s.level); gold-=c; let roll=Math.random()*100;
+ if(roll<chance(s.level)){
+  s.level++; discovered.add(s.level);
+  addLog(`${swordName(s.level)} 강화에 성공했습니다! (내구도 ${s.durability})`,"success");
+  document.getElementById("mainSword").style.transform="scale(1.13)";
+  setTimeout(()=>document.getElementById("mainSword").style.transform="",220);
+  render(); toast(`강화 성공! ${s.level}강 달성 ⚔️`,"good");
+  if(s.level===MAX_LEVEL) toast("축하합니다! 250강 전설의 칼을 완성했습니다!","good");
+ } else {
+  s.durability--;
+  addLog(`${swordName(s.level)} 강화 실패 · 내구도 ${s.durability}/${10+(s.durabilityBonus||0)}`,"fail");
+  if(s.durability<=0){
+   addLog(`${swordName(s.level)}이(가) 내구도 소진으로 부서졌습니다.`,"fail");
+   let idx=inventory.findIndex(x=>x.id===s.id); inventory.splice(idx,1);
+   if(inventory.length===0){ selected=null; toast("칼이 부서졌습니다! 상점에서 새 칼을 구매하세요.","bad"); }
+   else { selected=inventory[0].id; toast("내구도가 0이 되어 칼이 부서졌습니다!","bad"); }
+  } else toast(`강화 실패! 내구도 ${s.durability} 남음`,"bad");
+  render();
+ }
+}
+function buyDurabilityTicket(count=1, silent=false){
+ const price=8000*count; if(gold<price){ if(!silent) toast("골드가 부족합니다.","bad"); return false; }
+ gold-=price; durabilityTickets+=count;
+ addLog(`내구도 추가권 ${count}개 구매 (-${fmt(price)})`);
+ render(); if(!silent) toast(`내구도 추가권 ${count}개 구매!`,"good");
+ return true;
+}
+function useDurabilityTicket(count=1){
+ if(durabilityTickets<count) return toast(`내구도 추가권이 ${count}개 부족합니다. (보유 ${durabilityTickets})`,"bad");
+ let s=selectedSword(); if(!s) return toast("먼저 칼을 구매하세요.","bad");
+ const add=5*count;
+ s.durability+=add; s.durabilityBonus=(s.durabilityBonus||0)+add; durabilityTickets-=count;
+ addLog(`${swordName(s.level)}에 내구도 추가권 ${count}개 사용 (+${add})`);
+ render(); toast(`내구도 +${add}!`,"good");
+}
+function buyEnchantDurabilityTicket(count=1, silent=false){
+ const price=12000*count; if(gold<price){ if(!silent) toast("골드가 부족합니다.","bad"); return false; }
+ gold-=price; enchantDurabilityTickets+=count;
+ addLog(`인챈트 내구도 추가권 ${count}개 구매 (-${fmt(price)})`);
+ render(); if(!silent) toast(`인챈트 내구도 추가권 ${count}개 구매!`,"good");
+ return true;
+}
+function buyLuck(silent=false){
+ if(permanentLuck>=20){ if(!silent) toast("영구 행운은 최대 +20%입니다.","bad"); return false; }
+ const price=Math.round(15000*Math.pow(2,permanentLuck/2));
+ if(gold<price){ if(!silent) toast("골드가 부족합니다.","bad"); return false; }
+ gold-=price; permanentLuck+=2;
+ addLog(`영구 행운 +2% 구매 (현재 +${permanentLuck}%)`);
+ render(); if(!silent) toast(`영구 행운 +2%! 현재 +${permanentLuck}%`,"good");
+ return true;
+}
+function useEnchantDurabilityTicket(count=1){
+ if(enchantDurabilityTickets<count) return toast(`인챈트 내구도 추가권이 ${count}개 부족합니다. (보유 ${enchantDurabilityTickets})`,"bad");
+ let s=selectedSword(); if(!s||!s.enchant) return toast("인챈트가 있는 칼을 선택하세요.","bad");
+ const add=5*count;
+ s.enchant.durability+=add; s.enchant.durabilityBonus=(s.enchant.durabilityBonus||0)+add; enchantDurabilityTickets-=count;
+ addLog(`${swordName(s.level)}의 인챈트에 내구도 추가권 ${count}개 사용 (+${add})`);
+ render(); toast(`인챈트 내구도 +${add}!`,"good");
+}
+function drawEnchant(){
+ const price=10000; if(gold<price) return toast("골드가 부족합니다.","bad");
+ let s=selectedSword(); if(!s) return toast("먼저 칼을 선택하세요.","bad");
+ gold-=price;
+ const roll=Math.random();
+ let stage=1; if(roll<0.1) stage=3; else if(roll<0.4) stage=2;
+ const type=Math.floor(Math.random()*7);
+ s.enchant={type,stage,level:1,durability:10,durabilityBonus:0};
+ const et=enchantTypes[type];
+ addLog(`${et.icon} ${et.name} ${stage}단계 인챈트를 획득했습니다!`);
+ render(); toast(`${et.icon} ${et.name} ${stage}단계 획득!`,"good");
+}
+function enhanceEnchant(){
+ let s=selectedSword(); if(!s||!s.enchant||s.enchant.level>=MAX_ENCHANT_LEVEL) return;
+ if(s.enchant.durability<=0) return toast("인챈트 내구도가 0입니다.","bad");
+ const eCost=Math.round(2000*Math.pow(1.18,s.enchant.level-1));
+ if(gold<eCost) return toast("강화 비용이 부족합니다.","bad");
+ gold-=eCost;
+ const eChance=Math.max(5,70*Math.pow(0.97,s.enchant.level-1));
+ if(Math.random()*100<eChance){
+  s.enchant.level++;
+  addLog(`인챈트 강화 성공! ${s.enchant.level}강`,"success");
+  render(); toast(`인챈트 ${s.enchant.level}강 달성!`,"good");
+  if(s.enchant.level===MAX_ENCHANT_LEVEL) toast("인챈트 최대 강화 달성!","good");
+ } else {
+  s.enchant.durability--;
+  addLog(`인챈트 강화 실패 · 내구도 ${s.enchant.durability}`,"fail");
+  if(s.enchant.durability<=0){
+   addLog(`인챈트가 내구도 소진으로 파괴되었습니다.`,"fail");
+   s.enchant=null;
+   toast("인챈트가 파괴되었습니다!","bad");
+  } else toast(`인챈트 강화 실패! 내구도 ${s.enchant.durability}`,"bad");
+  render();
+ }
+}
+function calculateDamage(s, preview=false){
+ if(!s) return {dmg:0, crit:false};
+ let dmg = s.level * 12 + 20;
+ if(s.enchant){
+  const et = enchantTypes[s.enchant.type];
+  const stageMult = et.mult[s.enchant.stage-1];
+  const levelMult = 1 + (s.enchant.level-1)*0.015;
+  dmg = Math.round(dmg * stageMult * levelMult);
+ }
+ dmg += stats.damage * 8;
+ if(preview) return {dmg, crit:false};
+ const critChance = Math.min(60, 5 + stats.crit * 2);
+ if(Math.random()*100 < critChance){
+  const critMult = 1.5 + stats.critDmg * 0.05;
+  dmg = Math.round(dmg * critMult);
+  return {dmg, crit:true};
+ }
+ return {dmg, crit:false};
+}
+function getMonsterMaxHP(lv){ return Math.round(80 * Math.pow(lv, 1.35) + lv*30); }
+function monsterName(lv){
+ const names=["슬라임","고블린","오크","늑대","골렘","드래곤","악마","신화수호자"];
+ return (names[Math.min(names.length-1, Math.floor((lv-1)/12))]||"몬스터") + " Lv." + lv;
+}
+function setMonsterLevel(lv){
+ monsterLevel = Math.max(1, Math.min(10000, Math.floor(lv)||1));
+ monsterMaxHP = getMonsterMaxHP(monsterLevel);
+ monsterHP = monsterMaxHP;
+ render();
+ toast(`${monsterName(monsterLevel)} 설정!`);
+}
+function setMonsterLevelFromInputs(){
+ const sliderVal = +document.getElementById("monsterLevelSlider").value;
+ const inputVal = +document.getElementById("monsterLevelInput").value;
+ const lv = inputVal || sliderVal || 1;
+ setMonsterLevel(lv);
+}
+function attackMonster(){
+ const s = selectedSword();
+ if(!s) return toast("먼저 칼을 선택하세요.","bad");
+ if(monsterHP<=0){ setMonsterLevel(monsterLevel); return; }
+ const result = calculateDamage(s);
+ monsterHP = Math.max(0, monsterHP - result.dmg);
+ const critText = result.crit ? " 치명타!" : "";
+ toast(`-${result.dmg} 데미지${critText}`, result.crit?"good":"");
+ if(monsterHP<=0){
+  // Drops
+  const goldDrop = Math.round(40 * monsterLevel * (0.8 + Math.random()*0.6));
+  gold += goldDrop;
+  let drops = [`🪙 +${fmt(goldDrop)}`];
+  // Materials chance scales with level
+  const dropChance = Math.min(80, 15 + monsterLevel*0.4);
+  if(Math.random()*100 < dropChance){
+   const matTypes = ["stone","luck","crit","power"];
+   const mat = matTypes[Math.floor(Math.random()*matTypes.length)];
+   const amount = Math.max(1, Math.floor(monsterLevel/8) + (Math.random()<0.3?1:0));
+   materials[mat] = (materials[mat]||0) + amount;
+   const matNames = {stone:"강화석",luck:"행운 파편",crit:"치명타 정수",power:"힘의 결정"};
+   drops.push(`${matNames[mat]||mat} x${amount}`);
+  }
+  lastDrops = drops;
+  addLog(`${monsterName(monsterLevel)} 처치! ${drops.join(", ")}`);
+  toast(`처치 성공! ${drops.join(" · ")}`,"good");
+  // Reset same monster for farming
+  monsterHP = monsterMaxHP;
+ }
+ render();
+}
+function upgradeStat(stat, costMat, amount=1){
+ if((materials[costMat]||0) < amount) return toast("재료가 부족합니다.","bad");
+ materials[costMat] -= amount;
+ stats[stat] = (stats[stat]||0) + 1;
+ const names={damage:"공격력",luck:"행운",crit:"치명타 확률",critDmg:"치명타 피해"};
+ addLog(`${names[stat]||stat} +1 강화`);
+ render();
+ toast(`${names[stat]||stat} 상승!`,"good");
+}
+// Tutorial
+const tutorialSteps=[
+ {title:"칼 강화 게임에 오신 것을 환영합니다!",text:"이 게임에서는 칼을 구매하고 강화하여 더 강한 전설의 칼을 만들 수 있습니다. 최대 250강까지 도전하세요!"},
+ {title:"칼 구매하기",text:"왼쪽 상점에서 다양한 칼을 구매할 수 있습니다. 구매 버튼을 1초 이상 길게 누르면 연속으로 여러 개를 살 수 있어요."},
+ {title:"강화하기",text:"가운데에서 선택한 칼을 강화하세요. 성공하면 등급이 올라가고 판매 가격도 높아집니다. 실패해도 칼은 사라지지 않지만 내구도가 감소합니다."},
+ {title:"아이템 활용",text:"오른쪽 아이템 상점에서 내구도 추가권과 영구 행운을 구매하세요. 행운은 강화 성공 확률을 높여줍니다."},
+ {title:"인챈트 공방",text:"하단의 '인챈트 공방' 버튼으로 이동하세요. 확률로 인챈트를 뽑아 칼에 붙이면 판매 가치가 크게 올라갑니다. 인챈트도 강화할 수 있어요!"},
+ {title:"준비 완료!",text:"이제 당신만의 전설적인 칼을 만들어 보세요. 행운을 빕니다! ⚔️"}
+];
+let tutIndex=0;
+function showTutorial(){
+ if(localStorage.getItem("swordGameTutSeen")) return;
+ document.getElementById("tutorial").style.display="flex";
+ showTutStep();
+}
+function showTutStep(){
+ const step=tutorialSteps[tutIndex];
+ document.getElementById("tutTitle").textContent=step.title;
+ document.getElementById("tutText").textContent=step.text;
+ document.getElementById("nextTut").textContent=tutIndex===tutorialSteps.length-1?"시작하기":"다음";
+}
+document.getElementById("nextTut").addEventListener("click",()=>{
+ tutIndex++;
+ if(tutIndex>=tutorialSteps.length){
+  document.getElementById("tutorial").style.display="none";
+  localStorage.setItem("swordGameTutSeen","1");
+ } else showTutStep();
+});
+document.getElementById("skipTut").addEventListener("click",()=>{
+ document.getElementById("tutorial").style.display="none";
+ localStorage.setItem("swordGameTutSeen","1");
+});
+document.getElementById("upgradeBtn").addEventListener("click",enhance);
+document.getElementById("clearLog").addEventListener("click",()=>{logs=[];render()});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+ if(confirm("골드와 칼 도감, 강화 기록을 모두 초기화할까요?")){
+  localStorage.removeItem("swordGameSave");
+  gold=100000; inventory=[{id:1,level:1,durability:10,durabilityBonus:0,enchant:null}]; selected=1; nextId=2;
+  discovered=new Set([1]); logs=[]; permanentLuck=0; durabilityTickets=0; enchantDurabilityTickets=0;
+  materials={stone:0,luck:0,crit:0,power:0};
+  stats={damage:0,luck:0,crit:0,critDmg:0};
+  monsterLevel=1; monsterHP=0; monsterMaxHP=100;
+  render(); toast("게임을 초기화했습니다.");
+ }
+});
+document.getElementById("drawEnchantBtn").addEventListener("click",drawEnchant);
+document.getElementById("enhanceEnchantBtn").addEventListener("click",enhanceEnchant);
+if(!loadGame()){
+ addLog("낡은 단검을 가지고 모험을 시작했습니다.");
+}
+if(!monsterMaxHP || monsterMaxHP < 10) setMonsterLevel(monsterLevel||1);
+document.getElementById("attackBtn").addEventListener("click", attackMonster);
+document.getElementById("monsterLevelSlider").addEventListener("input", e => {
+ const v = e.target.value;
+ document.getElementById("monsterLevelDisplay").textContent = v;
+ document.getElementById("monsterLevelInput").value = v;
+});
+document.getElementById("monsterLevelInput").addEventListener("input", e => {
+ let v = Math.max(1, Math.min(10000, +e.target.value || 1));
+ e.target.value = v;
+ document.getElementById("monsterLevelDisplay").textContent = v;
+ document.getElementById("monsterLevelSlider").value = v;
+});
+render();
+showTutorial();
+</script>
+</body>
+</html>
